@@ -119,8 +119,8 @@ def getSrcData(styleList, mapList, configdata):
         if para != endrowpara:
             dataToList = Rowdata().make_struct(row)
 
-            for datainList in styleList.dataList:
-                data = copy.deepcopy(datainList)  # 列表放到列表一定要深拷贝
+            for datainList in styleList.dataList: # 这里循环列表拿出来的是引用
+                data = copy.deepcopy(datainList)  # 这里不能把引用放到列表，所以一定要深拷贝
 
                 if data.sClo != -1:
                     data.SData = srcSheet.cell(row, data.sClo).value
@@ -129,7 +129,7 @@ def getSrcData(styleList, mapList, configdata):
 
             # 映射表内容填进去
             for datainList in styleList.dataList:
-                data = copy.deepcopy(datainList)  #一定要深拷贝
+                data = copy.deepcopy(datainList)  # 这里不能把引用放到列表，所以一定要深拷贝
 
                 if data.dataStyle == 'M':
                     name = getName(dataToList.dataList)
