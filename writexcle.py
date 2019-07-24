@@ -43,7 +43,7 @@ class alldata:
     def AddOneData(self, data):
         self.dataList.append(data)
 
-def getMapId(configdata):
+def getMapIdByDict(configdata):
     mapxlsname = configdata.get_map("mapxlsname")
     RowStart = int(configdata.get_map("RowStart"))
     nameclos = int(configdata.get_map("nameclos"))
@@ -53,13 +53,13 @@ def getMapId(configdata):
     srcSheet = srcbook.sheets()[0]
     sumrows = srcSheet.nrows
 
-    mapList = []
+    dict = {}
     for row in range(RowStart, sumrows):
-        map = mapdata()
-        map.name = srcSheet.cell(row, nameclos).value
-        map.id = srcSheet.cell(row, mapidclos).value
-        mapList.append(map)
-    return mapList
+        name = srcSheet.cell(row, nameclos).value
+        id = srcSheet.cell(row, mapidclos).value
+        dict[name ] = id
+
+    return dict
 
 def getStyle(configdata):
     stylexlsname = configdata.get_style("stylexlsname")
@@ -95,14 +95,7 @@ def getName(dataToList):
             return data.SData
     return ''
 
-def getId(name, mapList):
-    for map in mapList:
-        if map.name == name:
-            return map.id
-    return ''
-
-
-def getSrcData(styleList, mapList, configdata):
+def getSrcData(styleList, idDict, configdata):
     srcxlsname = configdata.get_srcxls("srcxlsname")
     srcRowStart = int(configdata.get_srcxls("srcRowStart"))
     endrowpara = configdata.get_srcxls("endrowpara")
@@ -133,9 +126,8 @@ def getSrcData(styleList, mapList, configdata):
 
                 if data.dataStyle == 'M':
                     name = getName(dataToList.dataList)
-                    id = getId(name, mapList)
+                    id = idDict[name]
                     data.SData = id
-                    # print('data.sData  = ', data.SData )
                     dataToList.dataList.append(data)
                     break
             TargetData.dataList.append(dataToList)
@@ -160,14 +152,13 @@ def writedata(TargetData, rowStart = 4):
 if __name__ == '__main__':
     configdata = ReadConfig()
 
-    mapList = []
-    mapList = getMapId(configdata)
+    idDict =getMapIdByDict(configdata)
 
     styleList = Rowdata().make_struct()
     styleList = getStyle(configdata)
 
     TargetData = alldata()  # 最终数据表
-    TargetData = getSrcData(styleList, mapList, configdata)
+    TargetData = getSrcData(styleList, idDict, configdata)
 
     writedata(TargetData)
 
