@@ -124,13 +124,42 @@ def combineSame(TargetData, dataToList):
             break
     return hasSame
 
+def getSrcDataForRow(srcSheet, row, styleList, dataToList):
+    for datainList in styleList.dataList:  # 这里循环列表拿出来的是引用
+        data = copy.deepcopy(datainList)  # 这里不能把引用放到列表，所以一定要深拷贝
+
+        if data.sClo != -1:
+            data.SData = srcSheet.cell(row, data.sClo).value
+
+            # 得到一行的key
+            dataToList.key = getKey(dataToList, data)
+
+            dataToList.dataList.append(data)
+    return dataToList
+
+
+def getMapIdForRow(styleList, dataToList, idDict):
+    for datainList in styleList.dataList:
+        data = copy.deepcopy(datainList)  # 这里不能把引用放到列表，所以一定要深拷贝
+
+        if data.dataStyle == 'M':
+            name = getName(dataToList.dataList)
+
+            if name not in idDict:
+                print("ERR: getMapIdForRow %s not in idDict" % name)
+
+            id = idDict[name]  # 这里需要异常保护
+            data.SData = id
+            dataToList.dataList.append(data)
+            break
+    return dataToList
+
 def getSrcData(styleList, idDict, configdata):
     srcxlsname = configdata.get_srcxls("srcxlsname")
     srcRowStart = int(configdata.get_srcxls("srcRowStart"))
     endrowpara = configdata.get_srcxls("endrowpara")
 
-    srcbook = xlrd.open_workbook(srcxlsname)
-    srcSheet = srcbook.sheets()[0]
+    srcSheet = xlrd.open_workbook(srcxlsname).sheets()[0]
     stylerows = srcSheet.nrows
 
     TargetData = alldata()
@@ -141,31 +170,10 @@ def getSrcData(styleList, idDict, configdata):
         if para != endrowpara:
             dataToList = Rowdata().make_struct(row)
 
-            for datainList in styleList.dataList: # 这里循环列表拿出来的是引用
-                data = copy.deepcopy(datainList)  # 这里不能把引用放到列表，所以一定要深拷贝
-
-                if data.sClo != -1:
-                    data.SData = srcSheet.cell(row, data.sClo).value
-
-                    #得到一行的key
-                    dataToList.key = getKey(dataToList, data)
-
-                    dataToList.dataList.append(data)
+            dataToList = getSrcDataForRow(srcSheet, row, styleList, dataToList)
 
             # 映射表内容填进去
-            for datainList in styleList.dataList:
-                data = copy.deepcopy(datainList)  # 这里不能把引用放到列表，所以一定要深拷贝
-
-                if data.dataStyle == 'M':
-                    name = getName(dataToList.dataList)
-
-                    if name not in idDict:
-                        print("ERR: getSrcData %s not in idDict" % name)
-
-                    id = idDict[name] # 这里需要异常保护
-                    data.SData = id
-                    dataToList.dataList.append(data)
-                    break
+            dataToList = getMapIdForRow(styleList, dataToList, idDict)
 
             hasSame = combineSame(TargetData, dataToList)
 
@@ -174,8 +182,6 @@ def getSrcData(styleList, idDict, configdata):
         else:
             break
     return TargetData
-
-
 
 def writedata(TargetData, rowStart = 4):
     workbook = xlwt.Workbook(encoding='gbk')
