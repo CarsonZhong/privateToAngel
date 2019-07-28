@@ -8,4 +8,4 @@ https://github.com/CarsonZhong/
 
 git push -u origin master
 
-pyinstaller -F writexcle.py
+pyinstaller -F writexcle.py -n privateToAngel2.1

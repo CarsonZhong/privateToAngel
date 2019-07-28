@@ -4,7 +4,7 @@ import copy
 import xlrd
 import xlwt
 from common.readconfig import ReadConfig
-
+from common.love import printLove
 # 数据的最小单元格式
 class DataInfo:
     """终表数据结构"""
@@ -198,6 +198,11 @@ def writedata(TargetData, rowStart = 4):
     workbook.save('数据在此.xls')
     print("请打开 数据在此.xls")
 
+def externFunc(configdata):
+    dataRow = int(configdata.get_extern("extern"))
+    if dataRow == 1:
+        printLove()
+
 if __name__ == '__main__':
     configdata = ReadConfig()
 
@@ -210,6 +215,8 @@ if __name__ == '__main__':
     TargetData = getSrcData(styleList, idDict, configdata)
 
     writedata(TargetData)
+
+    externFunc(configdata)
 
     print("请按回车键退出")
     input()

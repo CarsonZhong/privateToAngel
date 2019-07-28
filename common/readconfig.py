@@ -19,7 +19,15 @@ class ReadConfig:
     def get_srcxls(self, param):
         value = self.cf.get("srcxls info", param)
         return value
-
+        
+    def get_extern(self, param):
+        value = self.cf.get("extern info", param)
+        return value
+        
+    def get_section(self, section, param):
+        value = self.cf.get(section, param)
+        return value
+        
 if __name__ == '__main__':
     test = ReadConfig()
 
