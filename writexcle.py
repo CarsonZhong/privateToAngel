@@ -21,12 +21,13 @@ class DataInfo:
 class Rowdata(object):
     """原始数据表"""
     class Struct(object):
-        def __init__(self, rownum = -1):
+        def __init__(self, rownum = -1, key = ''):
             self.dataList = []
             self.rownum = rownum
+            self.key = key
 
-    def make_struct(self, rownum = -1):
-        return self.Struct(rownum)
+    def make_struct(self, rownum = -1, key = ''):
+        return self.Struct(rownum, key)
 
 class mapdata:
     """映射表"""
@@ -57,7 +58,7 @@ def getMapIdByDict(configdata):
     for row in range(RowStart, sumrows):
         name = srcSheet.cell(row, nameclos).value
         id = srcSheet.cell(row, mapidclos).value
-        dict[name ] = id
+        dict[name] = id
 
     return dict
 
@@ -76,10 +77,10 @@ def getStyle(configdata):
     while styleSheet.cell(dataRow, styleCol).value:
         cell = styleSheet.cell(dataRow, styleCol)
         data = DataInfo().Struct()
-        # print('cell.value = ', cell.value)
+
         if cell.value != 'MAP' :
             data.sClo = ord(cell.value) - ord('A')
-        # print('data.sClo = ', data.sClo)
+
         data.dClo = styleCol
         data.dataStyle = styleSheet.cell(styleRow, styleCol).value
 
@@ -94,6 +95,34 @@ def getName(dataToList):
         if data.dataStyle == 'N':
             return data.SData
     return ''
+
+def getKey(dataToList, data):
+    if data.dataStyle == 'K':
+        return data.SData
+    return dataToList.key
+
+def combineSame(TargetData, dataToList):
+    hasSame = False
+    keyA = dataToList.key
+    for rowData in TargetData.dataList:
+        if keyA == rowData.key:
+            hasSame = True
+            Ddata = -1
+            for data in dataToList.dataList:
+                if data.dataStyle == 'D':
+                    Ddata = float(data.SData)
+
+            if Ddata == -1:
+                print("ERR: combineSameNew Ddata == -1")
+
+            for data in rowData.dataList:
+                if data.dataStyle == 'D':
+                    DdataT = float(data.SData) + Ddata
+                    data.SData = str(DdataT)
+
+        if hasSame == True:
+            break
+    return hasSame
 
 def getSrcData(styleList, idDict, configdata):
     srcxlsname = configdata.get_srcxls("srcxlsname")
@@ -117,7 +146,10 @@ def getSrcData(styleList, idDict, configdata):
 
                 if data.sClo != -1:
                     data.SData = srcSheet.cell(row, data.sClo).value
-                    # print('data.sData  = ', data.SData )
+
+                    #得到一行的key
+                    dataToList.key = getKey(dataToList, data)
+
                     dataToList.dataList.append(data)
 
             # 映射表内容填进去
@@ -126,14 +158,24 @@ def getSrcData(styleList, idDict, configdata):
 
                 if data.dataStyle == 'M':
                     name = getName(dataToList.dataList)
-                    id = idDict[name]
+
+                    if name not in idDict:
+                        print("ERR: getSrcData %s not in idDict" % name)
+
+                    id = idDict[name] # 这里需要异常保护
                     data.SData = id
                     dataToList.dataList.append(data)
                     break
-            TargetData.dataList.append(dataToList)
+
+            hasSame = combineSame(TargetData, dataToList)
+
+            if hasSame == False:
+                TargetData.dataList.append(dataToList)
         else:
             break
     return TargetData
+
+
 
 def writedata(TargetData, rowStart = 4):
     workbook = xlwt.Workbook(encoding='gbk')
@@ -148,6 +190,7 @@ def writedata(TargetData, rowStart = 4):
         rowStart = rowStart + 1
 
     workbook.save('数据在此.xls')
+    print("请打开 数据在此.xls")
 
 if __name__ == '__main__':
     configdata = ReadConfig()
@@ -161,4 +204,7 @@ if __name__ == '__main__':
     TargetData = getSrcData(styleList, idDict, configdata)
 
     writedata(TargetData)
+
+    print("请按回车键退出")
+    input()
 
