@@ -7,3 +7,5 @@ git remote add origin https://github.com/CarsonZhong/privateToAngel.git
 https://github.com/CarsonZhong/
 
 git push -u origin master
+
+pyinstaller -F writexcle.py
